@@ -4,7 +4,7 @@
 
     "name": "Simple Dark Mode",
     "description": "Simple Dark Mode",
-    "version": "1.0",
+    "version": "0.1.0",
 
     "icons": {
         "48": "images/icon-48.png",
