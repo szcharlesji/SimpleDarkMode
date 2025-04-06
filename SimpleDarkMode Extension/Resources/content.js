@@ -11,9 +11,9 @@ function createDarkModeStyle(colorScheme) {
             backgroundColor = '#333333';
             textColor = '#e0e0e0';
             break;
-        case 'bookist':
-            backgroundColor = '#f0e8d9';
-            textColor = '#333333';
+        case 'sepia':
+            backgroundColor = '#FFF1E0';
+            textColor = '#000000';
             break;
         default:
             backgroundColor = '#333333';
@@ -48,29 +48,29 @@ function createDarkModeStyle(colorScheme) {
     `;
 }
 
+// More efficient dark mode detection
 function isAlreadyDarkMode() {
     const body = document.body;
     const computedStyle = window.getComputedStyle(body);
-    const backgroundColor = computedStyle.backgroundColor;
-    const textColor = computedStyle.color;
     
-    // Convert RGB to brightness value
-    const getBrightness = (color) => {
-        const rgb = color.match(/\d+/g);
-        return (rgb[0] * 299 + rgb[1] * 587 + rgb[2] * 114) / 1000;
+    // Use more robust color analysis
+    const isLowContrast = (color1, color2) => {
+        const getLuminance = (color) => {
+            const rgb = color.match(/\d+/g).map(Number);
+            const [r, g, b] = rgb.map(c => {
+                c /= 255;
+                return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+            });
+            return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        };
+
+        const contrast = Math.abs(getLuminance(color1) - getLuminance(color2));
+        return contrast < 0.5; // Adjust threshold as needed
     };
 
-    const backgroundBrightness = getBrightness(backgroundColor);
-    const textBrightness = getBrightness(textColor);
-
-    // Check for common dark mode indicators
-    const hasDarkClass = body.classList.contains('dark') || body.classList.contains('darkmode') || body.classList.contains('night-mode');
-    const hasDarkAttribute = body.getAttribute('data-theme') === 'dark' || body.getAttribute('theme') === 'dark';
-    const significantBrightnessDifference = Math.abs(backgroundBrightness - textBrightness) > 50;
-
-    // If background is significantly darker than text, or if there are dark mode indicators, it's likely already in dark mode
-    return (backgroundBrightness < textBrightness && significantBrightnessDifference) || hasDarkClass || hasDarkAttribute;
+    return isLowContrast(computedStyle.backgroundColor, computedStyle.color);
 }
+
 
 function applyDarkMode(colorScheme) {
     style.textContent = createDarkModeStyle(colorScheme);
